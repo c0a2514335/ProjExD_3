@@ -1,3 +1,4 @@
+import math  # 角度計算用（追加機能4）
 import os
 import random
 import sys
@@ -56,6 +57,7 @@ class Bird:
         self.img = __class__.imgs[(+5, 0)]
         self.rct: pg.Rect = self.img.get_rect()
         self.rct.center = xy
+        self.dire = (+5, 0)  # こうかとんの向きタプル（追加機能4）
 
     def change_img(self, num: int, screen: pg.Surface):
         """
@@ -82,6 +84,7 @@ class Bird:
             self.rct.move_ip(-sum_mv[0], -sum_mv[1])
         if not (sum_mv[0] == 0 and sum_mv[1] == 0):
             self.img = __class__.imgs[tuple(sum_mv)]
+            self.dire = tuple(sum_mv)  # 向きの更新（追加機能4）
         screen.blit(self.img, self.rct)
 
 
@@ -91,14 +94,16 @@ class Beam:
     """
     def __init__(self, bird: Bird):
         """
-        ビーム画像Surfaceを生成する
+        ビーム画像Surfaceをこうかとんの向きに応じて生成・回転し、位置を設定する（追加機能4）
         引数 bird：ビームを放つこうかとん（Birdインスタンス）
         """
-        self.img = pg.image.load("fig/beam.png")
+        self.vx, self.vy = bird.dire  # こうかとんの向きを速度に設定
+        angle = math.degrees(math.atan2(-self.vy, self.vx))  # 角度の計算
+        self.img = pg.transform.rotozoom(pg.image.load("fig/beam.png"), angle, 1.0)
         self.rct = self.img.get_rect()
-        self.rct.centery = bird.rct.centery
-        self.rct.left = bird.rct.right
-        self.vx, self.vy = +5, 0
+        # こうかとんのサイズと向きに応じた初期位置設定
+        self.rct.centerx = bird.rct.centerx + bird.rct.width * self.vx / 5
+        self.rct.centery = bird.rct.centery + bird.rct.height * self.vy / 5
 
     def update(self, screen: pg.Surface):
         """
@@ -165,13 +170,41 @@ class Score:
         screen.blit(self.img, self.rct)
 
 
+class Explosion:
+    """
+    爆弾打ち落とし時の爆発エフェクトクラス
+    """
+    def __init__(self, bomb: Bomb):
+        """
+        爆破画像Surfaceの設定、初期座標の設定、表示時間（life）の設定を行う
+        引数 bomb：爆破するBombインスタンス
+        """
+        img0 = pg.image.load("fig/explosion.gif")
+        img1 = pg.transform.flip(img0, True, True)  # 上下左右にflipした画像
+        self.imgs = [img0, img1]
+        self.rct = img0.get_rect()
+        self.rct.center = bomb.rct.center
+        self.life = 20  # 爆発表示時間（フレーム数）
+
+    def update(self, screen: pg.Surface):
+        """
+        爆発経過時間を減算し、交互に画像を切り替えて描画する
+        引数 screen：画面Surface
+        """
+        self.life -= 1
+        if self.life > 0:
+            img = self.imgs[self.life % 2]  # チラつき抑止の交互表示
+            screen.blit(img, self.rct)
+
+
 def main():
     pg.display.set_caption("たたかえ！こうかとん")
     screen = pg.display.set_mode((WIDTH, HEIGHT))
     bg_img = pg.image.load("fig/pg_bg.jpg")
     bird = Bird((300, 200))
     bombs = [Bomb((255, 0, 0), 10) for _ in range(NUM_OF_BOMBS)]
-    beams: list[Beam] = []  # 複数ビーム用の空リスト（追加機能2）
+    beams: list[Beam] = []
+    exps: list[Explosion] = []
     score = Score()
 
     clock = pg.time.Clock()
@@ -181,11 +214,10 @@ def main():
             if event.type == pg.QUIT:
                 return
             if event.type == pg.KEYDOWN and event.key == pg.K_SPACE:
-                beams.append(Beam(bird))  # スペースキーでビーム生成しリストに追加（追加機能2）
+                beams.append(Beam(bird))
 
         screen.blit(bg_img, [0, 0])
 
-        # こうかとんと爆弾の衝突判定
         for bomb in bombs:
             if bird.rct.colliderect(bomb.rct):
                 bird.change_img(8, screen)
@@ -193,7 +225,6 @@ def main():
                 time.sleep(1)
                 return
 
-        # 複数ビームと複数爆弾の衝突判定（追加機能2）
         for j, beam in enumerate(beams):
             if beam is None:
                 continue
@@ -203,12 +234,13 @@ def main():
                 if beam.rct.colliderect(bomb.rct):
                     beams[j] = None
                     bombs[i] = None
+                    exps.append(Explosion(bomb))
                     bird.change_img(6, screen)
                     score.score += 1
 
-        # リストの整理（Noneの除外および画面外に出たビームの削除）（追加機能2）
         bombs = [bomb for bomb in bombs if bomb is not None]
         beams = [beam for beam in beams if beam is not None and check_bound(beam.rct) == (True, True)]
+        exps = [exp for exp in exps if exp.life > 0]
 
         key_lst = pg.key.get_pressed()
         bird.update(key_lst, screen)
@@ -216,6 +248,8 @@ def main():
             beam.update(screen)
         for bomb in bombs:
             bomb.update(screen)
+        for exp in exps:
+            exp.update(screen)
 
         score.update(screen)
 
