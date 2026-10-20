@@ -13,6 +13,7 @@ os.chdir(os.path.dirname(os.path.abspath(__file__)))
 
 
 def check_bound(obj_rct: pg.Rect) -> tuple[bool, bool]:
+
     """
     オブジェクトが画面内or画面外を判定し，真理値タプルを返す関数
     引数：こうかとんや爆弾，ビームなどのRect
@@ -27,6 +28,7 @@ def check_bound(obj_rct: pg.Rect) -> tuple[bool, bool]:
 
 
 class Bird:
+
     """
     ゲームキャラクター（こうかとん）に関するクラス
     """
@@ -50,6 +52,7 @@ class Bird:
     }
 
     def __init__(self, xy: tuple[int, int]):
+
         """
         こうかとん画像Surfaceを生成する
         引数 xy：こうかとん画像の初期位置座標タプル
@@ -60,6 +63,7 @@ class Bird:
         self.dire = (+5, 0)  # こうかとんの向きタプル（追加機能4）
 
     def change_img(self, num: int, screen: pg.Surface):
+
         """
         こうかとん画像を切り替え，画面に転送する
         引数1 num：こうかとん画像ファイル名の番号
@@ -69,6 +73,7 @@ class Bird:
         screen.blit(self.img, self.rct)
 
     def update(self, key_lst: list[bool], screen: pg.Surface):
+
         """
         押下キーに応じてこうかとんを移動させる
         引数1 key_lst：押下キーの真理値リスト
@@ -89,10 +94,12 @@ class Bird:
 
 
 class Beam:
+
     """
     こうかとんが放つビームに関するクラス
     """
     def __init__(self, bird: Bird):
+
         """
         ビーム画像Surfaceをこうかとんの向きに応じて生成・回転し、位置を設定する（追加機能4）
         引数 bird：ビームを放つこうかとん（Birdインスタンス）
@@ -106,6 +113,7 @@ class Beam:
         self.rct.centery = bird.rct.centery + bird.rct.height * self.vy / 5
 
     def update(self, screen: pg.Surface):
+
         """
         ビームを速度ベクトルself.vx, self.vyに基づき移動させる
         引数 screen：画面Surface
@@ -116,6 +124,7 @@ class Beam:
 
 
 class Bomb:
+
     """
     爆弾に関するクラス
     """
@@ -133,6 +142,7 @@ class Bomb:
         self.vx, self.vy = +5, +5
 
     def update(self, screen: pg.Surface):
+
         """
         爆弾を速度ベクトルself.vx, self.vyに基づき移動させる
         引数 screen：画面Surface
@@ -147,6 +157,7 @@ class Bomb:
 
 
 class Score:
+
     """
     打ち落とした爆弾の数を表示するスコアクラス
     """
@@ -162,6 +173,7 @@ class Score:
         self.rct.center = (100, HEIGHT - 50)  # 画面左下
 
     def update(self, screen: pg.Surface):
+
         """
         現在のスコア文字列Surfaceを生成し、画面に転送する
         引数 screen：画面Surface
@@ -171,10 +183,12 @@ class Score:
 
 
 class Explosion:
+
     """
     爆弾打ち落とし時の爆発エフェクトクラス
     """
     def __init__(self, bomb: Bomb):
+
         """
         爆破画像Surfaceの設定、初期座標の設定、表示時間（life）の設定を行う
         引数 bomb：爆破するBombインスタンス
@@ -187,6 +201,7 @@ class Explosion:
         self.life = 20  # 爆発表示時間（フレーム数）
 
     def update(self, screen: pg.Surface):
+        
         """
         爆発経過時間を減算し、交互に画像を切り替えて描画する
         引数 screen：画面Surface
