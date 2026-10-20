@@ -85,7 +85,7 @@ class Bird:
 
 class Beam:
     """
-    こうかとんが放つビームに関するクラス（練習問題1）
+    こうかとんが放つビームに関するクラス
     """
     def __init__(self, bird: Bird):
         """
@@ -159,18 +159,27 @@ def main():
 
         screen.blit(bg_img, [0, 0])
 
-        if bird.rct.colliderect(bomb.rct):
-            # ゲームオーバー時に，こうかとん画像を切り替え，1秒間表示させる
-            bird.change_img(8, screen)
-            pg.display.update()
-            time.sleep(1)
-            return
+        # 爆弾とこうかとんの衝突判定（爆弾が存在する場合のみ）
+        if bomb is not None:
+            if bird.rct.colliderect(bomb.rct):
+                bird.change_img(8, screen)
+                pg.display.update()
+                time.sleep(1)
+                return
+
+        # 爆弾とビームの衝突判定（両方が存在する場合のみ）
+        if bomb is not None:
+            if beam is not None:
+                if beam.rct.colliderect(bomb.rct):
+                    beam = None
+                    bomb = None
 
         key_lst = pg.key.get_pressed()
         bird.update(key_lst, screen)
         if beam is not None:
             beam.update(screen)
-        bomb.update(screen)
+        if bomb is not None:
+            bomb.update(screen)
 
         pg.display.update()
         tmr += 1
