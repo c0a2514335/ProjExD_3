@@ -6,6 +6,8 @@ import pygame as pg
 
 WIDTH = 1100  # ゲームウィンドウの幅
 HEIGHT = 650  # ゲームウィンドウの高さ
+NUM_OF_BOMBS = 5  # 爆弾の数（練習5）
+
 os.chdir(os.path.dirname(os.path.abspath(__file__)))
 
 
@@ -144,8 +146,10 @@ def main():
     screen = pg.display.set_mode((WIDTH, HEIGHT))
     bg_img = pg.image.load("fig/pg_bg.jpg")
     bird = Bird((300, 200))
-    bomb = Bomb((255, 0, 0), 10)
-    beam = None  # ゲーム初期化時にはビームは存在しない
+    
+    # NUM_OF_BOMBS個のBombインスタンスのリストを生成（練習5）
+    bombs = [Bomb((255, 0, 0), 10) for _ in range(NUM_OF_BOMBS)]
+    beam = None
 
     clock = pg.time.Clock()
     tmr = 0
@@ -154,32 +158,37 @@ def main():
             if event.type == pg.QUIT:
                 return
             if event.type == pg.KEYDOWN and event.key == pg.K_SPACE:
-                # スペースキー押下でBeamクラスのインスタンス生成
                 beam = Beam(bird)
 
         screen.blit(bg_img, [0, 0])
 
-        # 爆弾とこうかとんの衝突判定
-        if bomb is not None:
+        # 各爆弾との衝突判定（練習5）
+        for i, bomb in enumerate(bombs):
+            if bomb is None:
+                continue
+            # こうかとんと爆弾の衝突
             if bird.rct.colliderect(bomb.rct):
                 bird.change_img(8, screen)
                 pg.display.update()
                 time.sleep(1)
                 return
-
-        # 爆弾とビームの衝突判定（よろこびエフェクト追加）
-        if bomb is not None:
+            # ビームと爆弾の衝突
             if beam is not None:
                 if beam.rct.colliderect(bomb.rct):
                     beam = None
-                    bomb = None
-                    bird.change_img(6, screen)  # こうかとん喜びエフェクト表示
+                    bombs[i] = None
+                    bird.change_img(6, screen)
+
+        # Noneでない爆弾のみのリストに更新（練習5）
+        bombs = [bomb for bomb in bombs if bomb is not None]
 
         key_lst = pg.key.get_pressed()
         bird.update(key_lst, screen)
         if beam is not None:
             beam.update(screen)
-        if bomb is not None:
+            
+        # 更新された爆弾リストの描画（Noneチェック不要）（練習5）
+        for bomb in bombs:
             bomb.update(screen)
 
         pg.display.update()
