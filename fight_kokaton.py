@@ -159,7 +159,7 @@ def main():
 
         screen.blit(bg_img, [0, 0])
 
-        # 爆弾とこうかとんの衝突判定（爆弾が存在する場合のみ）
+        # 爆弾とこうかとんの衝突判定
         if bomb is not None:
             if bird.rct.colliderect(bomb.rct):
                 bird.change_img(8, screen)
@@ -167,12 +167,13 @@ def main():
                 time.sleep(1)
                 return
 
-        # 爆弾とビームの衝突判定（両方が存在する場合のみ）
+        # 爆弾とビームの衝突判定（よろこびエフェクト追加）
         if bomb is not None:
             if beam is not None:
                 if beam.rct.colliderect(bomb.rct):
                     beam = None
                     bomb = None
+                    bird.change_img(6, screen)  # こうかとん喜びエフェクト表示
 
         key_lst = pg.key.get_pressed()
         bird.update(key_lst, screen)
